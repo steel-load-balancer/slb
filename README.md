@@ -9,6 +9,10 @@ A load-balancer forged in the fires of [Sheffield](https://en.wikipedia.org/wiki
 
    ![](Mount_Doom.gif)
 
+## Getting `slb`
+
+Prebuilt binaries for `armv7` and `amd64` exist in the [releases](https://github.com/steel-load-balancer/slb/releases) page, or grab the source and `go build` away 🤓
+
 ## How it works!
 
 The **slb** automates a number of seperate tasks to provide the end user a simple to use load-balancing experience. It provides a simple API endpoint and will automatically create a load-balancer endpoint (IP address), which a user can easily add backend servers too.
