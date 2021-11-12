@@ -21,6 +21,10 @@ The requirements are very lightweight!!
 - Layer 2 network (for ARP)
 - Layer 3 network (for BGP)
 
+It supports both x86 and arm, and will run happily on a Raspberry pi!
+
+![](rpi.jpg)
+
 **Architecture**
 
 The Machine that is running slb will create an API endpoint on port 10001 that is used to create load-balancers, this API endpoint is used to create/update and delete load-balancer instances. 
