@@ -1,48 +1,90 @@
 # slb
-A Load-balancer made from steel
 
-![](steel.gif)
+A load-balancer forged in the fires of [Sheffield](https://en.wikipedia.org/wiki/Steel_City)
 
-If I figure out how to make it work..
+![](Mount_Doom.gif)
+
+The **Steel Load Balancer**
+
+
+   ![](steel.gif)
 
 ## How it works!
 
-The slb LB PoC uses BGP/IPVS and Equinix Metal EIPs to create a load-balancer service.
+The **slb** automates a number of seperate tasks to provide the end user a simple to use load-balancing experience. It provides a simple API endpoint and will automatically create a load-balancer endpoint (IP address), which a user can easily add backend servers too.
 
 **Requirements**
 
-A Machine will need to be created inside of Equinix Metal to host, slb (you'll also need the various IDs for the Facility/project and an AUTH token.
+The requirements are very lightweight!!
+
+- Linux host (running a 3.x+ kernel)
+- Layer 2 network (for ARP)
+- Layer 3 network (for BGP)
 
 **Architecture**
 
-The EM Machine that is running slb will create an API endpoint on port 10001 that is used to create load-balancers. When we create a new loadBalancer with the API, slb will use the EM API to request a public IP address and it will then use BGP to advertise that address to the ToR switches. At this point our loadbalancer address will be public and we should be able to hit it with a `ping`. We can now use the API to add backend `server:port` to this load-balancer instance at this point we will use IPVS to create a NAT based round-robin load-balancer instance. 
+The Machine that is running slb will create an API endpoint on port 10001 that is used to create load-balancers, this API endpoint is used to create/update and delete load-balancer instances. 
 
-### Set the environment
+- In Layer2 `slb` should be started with an IPAM range to create loadbalancers with
+- In layer3 `slb` will use the Equinix Metal API to select an IP address.
+
+This new load-balancer is then advertised to the outside world through either network mechanism. We can now use the API to add backend `server:port` to this load-balancer instance at this point we will use IPVS to create a NAT based round-robin load-balancer instance. 
+
+### Using SLB
+
+#### When running on a layer 2 network
+
+The below example will create an `slb` server that listens on port 10001 and will generate load-balancers in the ipamRange specified.
+```
+./slb server \
+      --arp \
+      --adapter eth0 \
+      --ipamRange 192.168.0.85-192.168.0.90
+```
+
+**Example output**
 
 ```
-export FACILITY_ID=""
+INFO[0000] Starting the Steel Load-Balancer
+INFO[0000] API Server will be exposed on [0.0.0.0:10001]
+INFO[0000] Enabled IPv4 Forwarding in the kernel
+INFO[0000] Enabled Connection tracking in the kernel
+```
+
+#### When using Equinix Metal (Layer 3)
+
+The Auth token is required in order for API queries:
+
+```
 export PACKET_AUTH_TOKEN=""
-export PROJECT_ID=""
 ```
 
-### Start slb
+Also required are the project and facility IDs so that Equinix Metal Elastic IPs are created in the correct facility/project.
 
 ```
-$ sudo -E ./vippy 
-INFO[0000] Starting Equinix Metal - Vippy LoadBalancer  
-INFO[0000] Creating Equinix Metal Client                
-INFO[0000] Creating BGP                                 
-INFO[0002] Querying BGP settings for [am6-c3.small.x86-01] 
-INFO[0003] Add a peer configuration for:169.254.255.1    Topic=Peer
-INFO[0003] Add a peer configuration for:169.254.255.2    Topic=Peer
-INFO[0003] API Server is now listening on :10001        
-INFO[0010] Peer Up                                       Key=169.254.255.1 State=BGP_FSM_OPENCONFIRM Topic=Peer
-INFO[0010] Peer Up                                       Key=169.254.255.2 State=BGP_FSM_OPENCONFIRM Topic=Peer
-INFO[0010] conf:<local_as:65000 neighbor_address:"169.254.255.1" peer_as:65530 > state:<local_as:65000 neighbor_address:"169.254.255.1" peer_as:65530 session_state:ESTABLISHED router_id:"147.75.86.18" > transport:<local_address:"10.12.39.1" local_port:49627 remote_port:179 >  
-INFO[0010] conf:<local_as:65000 neighbor_address:"169.254.255.2" peer_as:65530 > state:<local_as:65000 neighbor_address:"169.254.255.2" peer_as:65530 session_state:ESTABLISHED router_id:"147.75.86.19" > transport:<local_address:"10.12.39.1" local_port:48247 remote_port:179 >  
+./slb server \
+      --adapter lo \
+      --bgp \
+      --equinixMetal \
+      --project xxxx \
+      --facility xxxx
 ```
 
-We can see above that Vippy has started, and has connected to the ToR switches in the facility ready to advertise our first load-balancer!
+**Example output**
+
+```
+INFO[0000] Starting the Steel Load-Balancer
+INFO[0000] API Server will be exposed on [0.0.0.0:10001]
+INFO[0000] Enabled IPv4 Forwarding in the kernel
+INFO[0000] Enabled IPv4 Virtual Server connection tracking in the kernel
+INFO[0002] Querying BGP settings for [am6-c3.small.x86-01]
+INFO[0002] Add a peer configuration for:169.254.255.1    Topic=Peer
+INFO[0002] Add a peer configuration for:169.254.255.2    Topic=Peer
+INFO[0007] Peer Up                                       Key=169.254.255.1 State=BGP_FSM_OPENCONFIRM Topic=Peer
+2021/11/12 13:40:02 conf:<local_as:65000 neighbor_address:"169.254.255.1" peer_as:65530 > state:<local_as:65000 neighbor_address:"169.254.255.1" peer_as:65530 session_state:ESTABLISHED router_id:"147.75.86.18" > transport:<local_address:"10.12.39.1" local_port:34481 remote_port:179 >
+INFO[0008] Peer Up                                       Key=169.254.255.2 State=BGP_FSM_OPENCONFIRM Topic=Peer
+2021/11/12 13:40:03 conf:<local_as:65000 neighbor_address:"169.254.255.2" peer_as:65530 > state:<local_as:65000 neighbor_address:"169.254.255.2" peer_as:65530 session_state:ESTABLISHED router_id:"147.75.86.19" > transport:<local_address:"10.12.39.1" local_port:45091 remote_port:179 >
+```
 
 ### Create a load-balancer
 
