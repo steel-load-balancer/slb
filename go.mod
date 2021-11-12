@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/cloudflare/ipvs v0.0.0-20210114211356-96b2597859b3
+	github.com/coreos/go-iptables v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kube-vip/kube-vip v0.4.1-0.20211110163729-88d6df058bd4

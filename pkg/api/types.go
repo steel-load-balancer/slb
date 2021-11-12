@@ -23,4 +23,5 @@ type backends struct {
 	UUID string `json:"uuid"`
 	IP   string `json:"ip"`
 	Port int    `json:"port"`
+	Type string `json:"type"`
 }
