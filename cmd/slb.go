@@ -26,7 +26,7 @@ func init() {
 	slbServer.PersistentFlags().StringVar(&m.SSLBConfig.Adapter, "adapter", "", "Adapter to bind Load-Balancer VIPs too")
 	slbServer.PersistentFlags().IntVar(&m.SSLBConfig.Port, "port", 10001, "API Port")
 	slbServer.PersistentFlags().BoolVar(&m.SSLBConfig.Arp, "arp", false, "Enable ARP for SLB")
-	slbServer.PersistentFlags().BoolVar(&m.SSLBConfig.Arp, "bgp", false, "Enable BGP for SLB")
+	slbServer.PersistentFlags().BoolVar(&m.SSLBConfig.Bgp, "bgp", false, "Enable BGP for SLB")
 
 	slbServer.PersistentFlags().StringVar(&m.SSLBConfig.IpamRange, "ipamRange", "", "Range of IP addresses to use for IPAM")
 
