@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/kube-vip/kube-vip/pkg/bgp"
 	"github.com/kube-vip/kube-vip/pkg/vip"
 	log "github.com/sirupsen/logrus"
 	"github.com/thebsdbox/slb/pkg/equinixmetal"
@@ -23,7 +24,18 @@ func (m *Manager) Start() {
 			log.Fatal(err)
 		}
 	}
-
+	if m.SSLBConfig.Bgp {
+		if m.SSLBConfig.EquinixMetal {
+			c, err := equinixmetal.FindBGPConfig(m.SSLBConfig.emClient, m.SSLBConfig.ProjectID)
+			if err != nil {
+				log.Fatal(err)
+			}
+			m.bgp, err = bgp.NewBGPServer(c)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
 	// start API server, this is blocking
 	m.apiServerStart()
 }
