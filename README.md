@@ -94,7 +94,7 @@ INFO[0008] Peer Up                                       Key=169.254.255.2 State
 
 `curl -X POST http://<host>:10001/loadbalancer -H 'Content-Type: application/json' -d '{"name":"test loadbalancer", "port": 6443}'`
 
-We can view this new loadbalancer through the API or on the cli where `vippy` is running!
+We can view this new loadbalancer through the API or on the cli where `slb` is running!
 
 ```
 curl -s http://<host>:10001/loadbalancers | jq
@@ -136,7 +136,7 @@ curl -s http://<node>:10001/loadbalancers | jq
 
 #### View load-balancer in ipvs
 
-On our vippy node we can inspect in more detail our load-balancer setup
+On our slb node we can inspect in more detail our load-balancer setup
 
 ```
 ipvsadm -ln
