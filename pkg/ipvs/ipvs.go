@@ -68,13 +68,20 @@ func (lb *IPVSLoadBalancer) RemoveIPVSLB() error {
 
 }
 
-func (lb *IPVSLoadBalancer) AddBackend(address string, port int) error {
+func (lb *IPVSLoadBalancer) AddBackend(address, fwdtype string, port int) error {
+	var forwardingMethod ipvs.ForwardType
+	switch strings.ToUpper(fwdtype) {
+	case "MASQ":
+		forwardingMethod = ipvs.Masquarade
+	case "LOCAL":
+		forwardingMethod = ipvs.Local
+	}
 	dst := ipvs.Destination{
 		Address:   ipvs.NewIP(net.ParseIP(address)),
 		Port:      uint16(port),
 		Family:    ipvs.INET,
 		Weight:    1,
-		FwdMethod: ipvs.Masquarade,
+		FwdMethod: forwardingMethod,
 	}
 
 	err := lb.client.CreateDestination(lb.loadBalancerService, dst)

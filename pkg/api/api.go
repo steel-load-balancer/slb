@@ -50,12 +50,9 @@ func (m *Manager) createNewLoadBalancer(w http.ResponseWriter, r *http.Request) 
 	json.Unmarshal(reqBody, &newLB)
 
 	// we will need a unique UUID first, then we will need an EIP
-
 	newLB.UUID = uuid.NewString()
-	// demoMode := os.Getenv("DEMO")
-	// demo, _ := strconv.ParseBool(demoMode)
-	// newLB.EIP = "0.0.0.0"
 
+	// Determine if load-balancer address comes from Equinix Metal API or internal IPAM
 	if m.SSLBConfig.EquinixMetal {
 		newLB.EIP, err = equinixmetal.GetEIP(m.SSLBConfig.emClient, m.SSLBConfig.ProjectID, m.SSLBConfig.Facility)
 		if err != nil {
@@ -78,6 +75,13 @@ func (m *Manager) createNewLoadBalancer(w http.ResponseWriter, r *http.Request) 
 	err = newLB.vip.AddIP()
 	if err != nil {
 		log.Error(err)
+	}
+
+	if m.SSLBConfig.Arp {
+		err = vip.ARPSendGratuitous(newLB.EIP, m.SSLBConfig.Adapter)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 
 	if m.SSLBConfig.Bgp {
@@ -124,8 +128,13 @@ func (m *Manager) createNewBackend(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Error(err)
 			}
+			// Default to MASQUERADING
+			if backend.Type == "" {
+				backend.Type = "MASQ"
+			}
+			loadbalancer.ipvs.AddBackend(backend.IP, backend.Type, backend.Port)
 			m.LoadBalancers[i].Backend = append(loadbalancer.Backend, backend)
-			loadbalancer.ipvs.AddBackend(backend.IP, backend.Port)
+
 			log.Infof("Created new backend for IP [%s] w/IP [%s] UUID [%s]", loadbalancer.EIP, backend.IP, backend.UUID)
 		}
 	}
@@ -136,9 +145,6 @@ func (m *Manager) deleteBackend(w http.ResponseWriter, r *http.Request) {
 	key := vars["uuid"]
 	backendKey := vars["backenduui"]
 
-	// Loop over all of our Articles
-	// if the article.Id equals the key we pass in
-	// return the article encoded as JSON
 	for _, loadbalancer := range m.LoadBalancers {
 		if loadbalancer.UUID == key {
 			for i, backend := range loadbalancer.Backend {
