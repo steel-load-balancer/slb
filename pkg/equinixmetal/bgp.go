@@ -45,6 +45,7 @@ func findSelf(client *packngo.Client, projectID string) *packngo.Device {
 	dev, _, _ := client.Devices.List(projectID, &packngo.ListOptions{})
 	for _, d := range dev {
 		me, _ := os.Hostname()
+		log.Debugf("%s to %s comparison", me, d.Hostname)
 		if me == d.Hostname {
 			return &d
 		}

@@ -155,19 +155,16 @@ func (m *Manager) createNewBackend(w http.ResponseWriter, r *http.Request) {
 func (m *Manager) deleteBackend(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["uuid"]
-	backendKey := vars["backenduui"]
-
-	for _, loadbalancer := range m.LoadBalancers {
+	backendKey := vars["backenduuid"]
+	for index, loadbalancer := range m.LoadBalancers {
 		if loadbalancer.UUID == key {
 			for i, backend := range loadbalancer.Backend {
 				if backend.UUID == backendKey {
+					log.Infof("Removing Backend [%s / %s]", backendKey, backend.IP)
 					loadbalancer.ipvs.RemoveBackend(backend.IP, backend.Port)
-					loadbalancer.Backend = append(loadbalancer.Backend[:i], loadbalancer.Backend[i+1:]...)
-
+					m.LoadBalancers[index].Backend = append(m.LoadBalancers[index].Backend[:i], m.LoadBalancers[index].Backend[i+1:]...)
 				}
-
 			}
-
 		}
 	}
 }
@@ -198,6 +195,8 @@ func (m *Manager) deleteLoadBalancer(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Error(err)
 			}
+			log.Infof("Removing LoadBalancer [%s / %s]", key, loadbalancer.EIP)
+
 			m.LoadBalancers = append(m.LoadBalancers[:index], m.LoadBalancers[index+1:]...)
 		}
 	}

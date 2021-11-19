@@ -25,7 +25,7 @@ func EnableMasq(adapter string) error {
 		if err != nil {
 			log.Fatalf("Unable to verify MASQUERADING iptables configuration: %s", err.Error())
 		}
-		log.Info("Created iptables Masquerading rule for [%s]", adapter)
+		log.Infof("Created iptables Masquerading rule for [%s]", adapter)
 	}
 	return nil
 }
